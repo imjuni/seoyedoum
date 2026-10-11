@@ -1,0 +1,15 @@
+<header class="z-10 flex h-12 shrink-0 items-center border-b bg-card px-4 shadow-sm">
+	<nav aria-label="주 내비게이션" class="flex w-full items-center justify-between">
+		<a href="/" class="flex items-center gap-2 rounded-sm font-bold text-foreground focus-visible:outline-2 focus-visible:outline-offset-4">
+			<img src="/favicon.svg" alt="" width="32" height="32" />
+			<span>Seoyedoum</span>
+		</a>
+		<a
+			href="/count/"
+			aria-current={Astro.url.pathname.replace(/\/$/, '') === '/count' ? 'page' : undefined}
+			class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground focus-visible:outline-2"
+		>
+			글자 수 세기
+		</a>
+	</nav>
+</header>
