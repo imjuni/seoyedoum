@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import '../styles/layout-fonts.css';
 ---
 
 <Layout title="글자 배치 | Seoyedoum" lang="ko">
@@ -21,7 +20,8 @@ import '../styles/layout-fonts.css';
       <label for="margin">용지 여백 <output id="margin-value">8%</output></label><input id="margin" type="range" min="3" max="20" value="8" />
       <label for="font-size">글자 크기 <output id="font-size-value">70%</output></label><input id="font-size" type="range" min="30" max="95" value="70" />
       <label for="seal-size">낙관 크기 <output id="seal-size-value">50%</output></label><input id="seal-size" type="range" min="20" max="95" value="50" />
-      <label for="font">글꼴</label><select id="font"><option value="galmul">갈물이철경체</option><option value="kkotdeul">꽃뜰이미경체</option><option value="iljung">일중김충현체</option><option value="serif">명조체</option><option value="sans-serif">고딕체</option></select>
+      <label for="font">글꼴</label><select id="font"><option value="sj_lck">갈물이철경체</option><option value="sj_lmk">꽃뜰이미경체</option><option value="sj_kch">일중김충현체</option><option value="serif">명조체</option><option value="sans-serif">고딕체</option></select>
+      <p class="hint">선택한 글꼴이 설치되어 있으면 적용하고, 없으면 명조체, 고딕체 순으로 표시합니다.</p>
       <div class="checks"><label><input id="grid" type="checkbox" checked /> 격자·번호 표시</label><label><input id="spaces" type="checkbox" /> 공백 한 칸 유지</label></div>
       <p class="hint">용지 크기는 직접 수정할 수 있습니다. 한 장을 넘는 글은 다음 장으로 이어집니다. 입력 내용은 서버에 저장하지 않습니다.</p>
     </aside>

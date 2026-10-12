@@ -10,12 +10,13 @@ const numeric = (id: string, fallback: number, min: number, max: number) => {
 const presets: Record<string, [string, number, number, number]> = {
   half: ['반절지', 35, 135, 4], full: ['전지', 70, 135, 8], national: ['국전지', 70, 100, 8],
 };
-const fontFamilies: Record<string, string> = {
-  galmul: '"Seoyedoum Galmul", Batang, "AppleMyungjo", serif',
-  kkotdeul: '"Seoyedoum Kkotdeul", Batang, "AppleMyungjo", serif',
-  iljung: '"Seoyedoum Iljung", Batang, "AppleMyungjo", serif',
-  serif: 'Batang, "AppleMyungjo", serif',
-  'sans-serif': 'sans-serif',
+const fontFallbacks = ['Batang', 'AppleMyungjo', 'Noto Serif CJK KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'sans-serif'];
+const fontFamilies: Record<string, string[]> = {
+  sj_lck: ['sj_lck', '이철경체', ...fontFallbacks],
+  sj_lmk: ['sj_lmk', '이미경체', ...fontFallbacks],
+  sj_kch: ['sj_kch', '김충현체', ...fontFallbacks],
+  serif: fontFallbacks,
+  'sans-serif': ['Malgun Gothic', 'Apple SD Gothic Neo', 'sans-serif'],
 };
 let page = 0;
 let totalPages = 1;
@@ -128,7 +129,7 @@ function draw() {
   for (const child of app.stage.removeChildren()) child.destroy();
   const grid = new Graphics();
   app.stage.addChild(grid);
-  const addText = (text: string, x: number, y: number, fontSize: number, fill: string, fontFamily: string) => {
+  const addText = (text: string, x: number, y: number, fontSize: number, fill: string, fontFamily: string | string[]) => {
     const label = new Text({ text, style: { fontFamily, fontSize, fill } });
     label.anchor.set(0.5);
     label.position.set(x, y);
@@ -165,7 +166,6 @@ function draw() {
 async function initialize() {
   try {
     element('render-status').textContent = '캔버스를 초기화하고 있습니다.';
-    await detectInstalledFonts();
     await app.init({ background: '#fffef8', antialias: true, autoStart: false, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true, preference: 'webgl' });
     element('paper-preview').appendChild(app.canvas);
     element('render-status').hidden = true;
@@ -173,8 +173,7 @@ async function initialize() {
     document.querySelectorAll('.controls input, .controls textarea, .controls select').forEach(control => {
       control.addEventListener('input', () => {
         clearTimeout(timer);
-        timer = setTimeout(async () => {
-          if (control.id === 'font') await loadSelectedFont();
+        timer = setTimeout(() => {
           draw();
           if (control.id === 'paper-width' || control.id === 'paper-height') fitPaper();
         }, 80);
@@ -191,7 +190,6 @@ async function initialize() {
     });
     element('previous').addEventListener('click', () => { page = Math.max(0, page - 1); draw(); });
     element('next').addEventListener('click', () => { page = Math.min(totalPages - 1, page + 1); draw(); });
-    await loadSelectedFont();
     draw();
     fitPaper();
   } catch (error) {
@@ -201,33 +199,4 @@ async function initialize() {
   }
 }
 
-async function detectInstalledFonts() {
-  const select = element('font') as HTMLSelectElement;
-  const localFonts = ['galmul', 'kkotdeul', 'iljung'];
-  const available = await Promise.all(localFonts.map(async (name) => {
-    const family = fontFamilies[name].split(',')[0];
-    try {
-      const faces = await document.fonts.load(`16px ${family}`, '가나다');
-      return faces.some((face) => face.status === 'loaded');
-    } catch {
-      return false;
-    }
-  }));
-  localFonts.forEach((name, index) => {
-    if (!available[index]) select.querySelector(`option[value="${name}"]`)?.remove();
-  });
-  select.value = localFonts.find((_, index) => available[index]) ?? 'serif';
-}
-
-async function loadSelectedFont() {
-  const font = (element('font') as HTMLSelectElement).value;
-  if (font === 'serif' || font === 'sans-serif') return;
-  const family = fontFamilies[font]?.split(',')[0];
-  if (!family) return;
-  try {
-    await document.fonts.load(`16px ${family}`, '가나다');
-  } catch (error) {
-    console.warn('Failed to load local layout font', error);
-  }
-}
 void initialize();
