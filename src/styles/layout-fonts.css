@@ -1,0 +1,20 @@
+@font-face {
+  font-family: "Seoyedoum Galmul";
+  src: local("sj_lck"), local("이철경체");
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Seoyedoum Kkotdeul";
+  src: local("sj_lmk"), local("이미경체");
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Seoyedoum Iljung";
+  src: local("sj_kch"), local("김충현체");
+  font-style: normal;
+  font-weight: 400;
+}

@@ -1,0 +1,83 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/layout-fonts.css';
+---
+
+<Layout title="글자 배치 | Seoyedoum" lang="ko">
+  <main class="workspace">
+    <aside class="controls">
+      <header><h1>글자 배치</h1><p>글을 담고, 종이 위의 균형을 살펴보세요.</p></header>
+      <label for="manuscript">배치할 글</label>
+      <textarea id="manuscript" rows="7" placeholder="여기에 글을 입력하세요.">바람이 지나간 자리마다
+고요한 마음을 놓아두고
+오늘도 천천히 써 내려간다</textarea>
+      <p class="hint">각 줄의 앞뒤 공백을 제거하고 한 줄로 이어 붙여, 오른쪽 열부터 열당 글자 수만큼 배치합니다.</p>
+      <label for="seal">낙관</label>
+      <input id="seal" type="text" placeholder="본문 뒤에 배치할 낙관을 입력하세요." />
+      <label for="paper">용지</label>
+      <select id="paper"><option value="half">반절지 · 35 × 135 cm</option><option value="full" selected>전지 · 70 × 135 cm</option><option value="national">국전지 · 70 × 100 cm</option></select>
+      <div class="pair"><label>가로 (cm)<input id="paper-width" type="number" min="10" max="200" value="70" /></label><label>세로 (cm)<input id="paper-height" type="number" min="10" max="300" value="135" /></label></div>
+      <div class="pair"><label>열 수<input id="columns" type="number" min="1" max="30" value="8" /></label><label>열당 글자 수<input id="rows" type="number" min="1" max="50" value="17" /></label></div>
+      <label for="margin">용지 여백 <output id="margin-value">8%</output></label><input id="margin" type="range" min="3" max="20" value="8" />
+      <label for="font-size">글자 크기 <output id="font-size-value">70%</output></label><input id="font-size" type="range" min="30" max="95" value="70" />
+      <label for="seal-size">낙관 크기 <output id="seal-size-value">50%</output></label><input id="seal-size" type="range" min="20" max="95" value="50" />
+      <label for="font">글꼴</label><select id="font"><option value="galmul">갈물이철경체</option><option value="kkotdeul">꽃뜰이미경체</option><option value="iljung">일중김충현체</option><option value="serif">명조체</option><option value="sans-serif">고딕체</option></select>
+      <div class="checks"><label><input id="grid" type="checkbox" checked /> 격자·번호 표시</label><label><input id="spaces" type="checkbox" /> 공백 한 칸 유지</label></div>
+      <p class="hint">용지 크기는 직접 수정할 수 있습니다. 한 장을 넘는 글은 다음 장으로 이어집니다. 입력 내용은 서버에 저장하지 않습니다.</p>
+    </aside>
+    <section class="preview" aria-label="글자 배치 미리보기">
+      <div class="toolbar"><span id="paper-info">전지 · 70 × 135 cm</span><div class="pagination"><button id="previous" type="button" aria-label="이전 장">←</button><output id="page-info" aria-live="polite">1 / 1장</output><button id="next" type="button" aria-label="다음 장">→</button></div></div>
+      <div id="preview-viewport" class="canvas-area">
+        <div id="paper-preview" role="img" aria-label="오른쪽에서 왼쪽으로 세로쓰기한 글자 배치"></div>
+        <p id="render-status" role="status">미리보기를 준비하고 있습니다.</p>
+        <div class="viewport-controls" role="group" aria-label="미리보기 이동 및 확대">
+          <span></span><button id="pan-up" type="button" aria-label="위로 이동" title="위로 이동">↑</button><button id="zoom-in" type="button" aria-label="확대" title="확대">＋</button>
+          <button id="pan-left" type="button" aria-label="왼쪽으로 이동" title="왼쪽으로 이동">←</button><button id="fit-paper" type="button" aria-label="용지에 맞춤" title="용지에 맞춤">⤢</button><button id="pan-right" type="button" aria-label="오른쪽으로 이동" title="오른쪽으로 이동">→</button>
+          <span></span><button id="pan-down" type="button" aria-label="아래로 이동" title="아래로 이동">↓</button><button id="zoom-out" type="button" aria-label="축소" title="축소">−</button>
+          <output id="zoom-level" class="zoom-level" aria-live="polite">100%</output>
+        </div>
+      </div>
+      <p id="layout-summary" class="summary" aria-live="polite"></p>
+      <noscript>미리보기를 사용하려면 JavaScript를 활성화해 주세요.</noscript>
+    </section>
+  </main>
+</Layout>
+
+<script>
+  import '../lib/layoutPreview';
+</script>
+
+<style>
+  .workspace { display: grid; grid-template-columns: 320px minmax(0, 1fr); height: 100%; min-height: 0; }
+  .controls { padding: 24px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  header p, .hint { color: var(--muted-foreground); font-size: 12px; line-height: 1.7; }
+  label { font-size: 13px; font-weight: 500; }
+  textarea, select, input[type=number], input[type=text] { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: var(--background); padding: 9px 10px; font-size: 13px; }
+  textarea { resize: vertical; min-height: 140px; line-height: 1.8; }
+  input[type=range] { width: 100%; accent-color: var(--primary); }
+  input[type=checkbox] { accent-color: var(--primary); }
+  :is(input, select, textarea, button):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pair input { margin-top: 6px; }
+  label output { float: right; color: var(--muted-foreground); }
+  .checks { display: flex; flex-direction: column; gap: 10px; }
+  .checks label { display: flex; align-items: center; gap: 8px; }
+  .preview { background: var(--muted); min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid var(--border); font-size: 12px; background: var(--card); }
+  .pagination { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+  button { border: 1px solid var(--border); border-radius: 5px; padding: 4px 10px; cursor: pointer; }
+  button:disabled { opacity: .3; cursor: default; }
+  .canvas-area { position: relative; flex: 1; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; }
+  .canvas-area:active { cursor: grabbing; }
+  #paper-preview { position: absolute; left: 0; top: 0; transform-origin: top left; box-shadow: 0 3px 20px #00000012; }
+  #paper-preview :global(canvas) { width: 100%; height: auto; display: block; }
+  #render-status { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 13px; color: var(--muted-foreground); text-align: center; }
+  .viewport-controls { position: absolute; right: 16px; bottom: 16px; display: grid; grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px) auto; gap: 4px; z-index: 1; }
+  .viewport-controls button { display: grid; place-items: center; padding: 0; border: 1px solid #6b7580; border-radius: 8px; background: #222a33; color: #f5f7f9; font-size: 22px; line-height: 1; box-shadow: 0 2px 6px #0003; }
+  .viewport-controls button:hover { background: #3c4855; }
+  .viewport-controls button:active { background: #536273; }
+  .zoom-level { grid-column: 1 / -1; justify-self: center; border-radius: 4px; padding: 2px 7px; background: #222a33; color: #f5f7f9; font-size: 11px; }
+  .summary { text-align: center; padding: 10px 16px; font-size: 12px; color: var(--muted-foreground); }
+  @media (max-width: 760px) { .workspace { height: auto; min-height: 100%; grid-template-columns: 1fr; } .controls { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); } .preview { height: 70dvh; min-height: 500px; } .toolbar { padding: 12px; } }
+</style>

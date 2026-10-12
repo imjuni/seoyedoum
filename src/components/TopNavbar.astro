@@ -4,6 +4,7 @@
 			<img src="/favicon.svg" alt="" width="32" height="32" />
 			<span>Seoyedoum</span>
 		</a>
+		<div class="flex items-center gap-1">
 		<a
 			href="/count/"
 			aria-current={Astro.url.pathname.replace(/\/$/, '') === '/count' ? 'page' : undefined}
@@ -11,5 +12,7 @@
 		>
 			글자 수 세기
 		</a>
+		<a href="/layout/" aria-current={Astro.url.pathname.replace(/\/$/, '') === '/layout' ? 'page' : undefined} class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground focus-visible:outline-2">글자 배치</a>
+		</div>
 	</nav>
 </header>

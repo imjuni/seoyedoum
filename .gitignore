@@ -42,6 +42,7 @@ build/Release
 
 # Dependency directories
 node_modules/
+.pnpm-store/
 jspm_packages/
 
 # TypeScript v1 declaration files
@@ -105,3 +106,4 @@ dist
 
 # TernJS port file
 .tern-port
+public/__font
