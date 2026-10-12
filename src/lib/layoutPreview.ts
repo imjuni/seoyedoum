@@ -18,6 +18,48 @@ const fontFamilies: Record<string, string[]> = {
   serif: fontFallbacks,
   'sans-serif': ['Malgun Gothic', 'Apple SD Gothic Neo', 'sans-serif'],
 };
+const settingsKey = 'seoyedoum.layout.settings.v1';
+const settingIds = [
+  'manuscript', 'seal', 'paper', 'paper-width', 'paper-height', 'columns', 'rows',
+  'margin', 'font-size', 'seal-size', 'font', 'grid', 'spaces',
+] as const;
+
+function saveSettings() {
+  try {
+    const settings = Object.fromEntries(settingIds.map((id) => {
+      const control = element(id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      return [id, control instanceof HTMLInputElement && control.type === 'checkbox' ? control.checked : control.value];
+    }));
+    sessionStorage.setItem(settingsKey, JSON.stringify(settings));
+  } catch (error) {
+    console.warn('Failed to save layout settings', error);
+  }
+}
+
+function restoreSettings() {
+  try {
+    const raw = sessionStorage.getItem(settingsKey);
+    if (!raw) return;
+    const settings: unknown = JSON.parse(raw);
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return;
+    for (const id of settingIds) {
+      const control = element(id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      const value = (settings as Record<string, unknown>)[id];
+      if (control instanceof HTMLInputElement && control.type === 'checkbox') {
+        if (typeof value === 'boolean') control.checked = value;
+      } else if (typeof value === 'string') {
+        if (control instanceof HTMLSelectElement && !Array.from(control.options).some((option) => option.value === value)) continue;
+        if (control instanceof HTMLInputElement && ['number', 'range'].includes(control.type)) {
+          const number = Number(value);
+          if (!value || !Number.isFinite(number) || number < Number(control.min) || number > Number(control.max)) continue;
+        }
+        control.value = value;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to restore layout settings', error);
+  }
+}
 let page = 0;
 let totalPages = 1;
 let timer: ReturnType<typeof setTimeout>;
@@ -165,6 +207,7 @@ function draw() {
 
 async function initialize() {
   try {
+    restoreSettings();
     element('render-status').textContent = '캔버스를 초기화하고 있습니다.';
     await app.init({ background: '#fffef8', antialias: true, autoStart: false, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true, preference: 'webgl' });
     element('paper-preview').appendChild(app.canvas);
@@ -172,6 +215,7 @@ async function initialize() {
     setupCamera();
     document.querySelectorAll('.controls input, .controls textarea, .controls select').forEach(control => {
       control.addEventListener('input', () => {
+        if (control.id !== 'paper') saveSettings();
         clearTimeout(timer);
         timer = setTimeout(() => {
           draw();
@@ -184,6 +228,7 @@ async function initialize() {
       input('paper-width').value = String(width);
       input('paper-height').value = String(height);
       input('columns').value = String(columns);
+      saveSettings();
       page = 0;
       draw();
       fitPaper();
