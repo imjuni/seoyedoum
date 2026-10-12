@@ -17,6 +17,14 @@ pnpm check
 pnpm build
 ```
 
+## Cloudflare Pages 직접 업로드
+
+```sh
+pnpm artifact
+```
+
+검사와 빌드 후 루트에 `seoyedoum.zip`을 만듭니다. Cloudflare Pages 대시보드의 직접 업로드에 이 ZIP 파일을 올리면 됩니다. Wrangler CLI로 배포할 때는 ZIP 대신 `dist/` 폴더를 사용하세요.
+
 ## UI 컴포넌트
 
 shadcn-svelte는 Vega 스타일과 neutral 색상을 사용합니다. 테마는

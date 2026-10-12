@@ -1,18 +1,25 @@
-<header class="z-10 flex h-12 shrink-0 items-center border-b bg-card px-4 shadow-sm">
-	<nav aria-label="주 내비게이션" class="flex w-full items-center justify-between">
-		<a href="/" class="flex items-center gap-2 rounded-sm font-bold text-foreground focus-visible:outline-2 focus-visible:outline-offset-4">
-			<img src="/favicon.svg" alt="" width="32" height="32" />
-			<span>Seoyedoum</span>
-		</a>
-		<div class="flex items-center gap-1">
-		<a
-			href="/count/"
-			aria-current={Astro.url.pathname.replace(/\/$/, '') === '/count' ? 'page' : undefined}
-			class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground focus-visible:outline-2"
-		>
-			글자 수 세기
-		</a>
-		<a href="/layout/" aria-current={Astro.url.pathname.replace(/\/$/, '') === '/layout' ? 'page' : undefined} class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground focus-visible:outline-2">글자 배치</a>
-		</div>
-	</nav>
+---
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+const menuItems = [
+  { href: '/count/', label: '글자 수 세기' },
+  { href: '/layout/', label: '글자 배치' },
+];
+---
+
+<header class="z-10 flex shrink-0 flex-wrap items-stretch gap-x-8 border-b bg-secondary px-6 max-[680px]:gap-x-3.5 max-[680px]:px-4">
+  <a href="/" class="inline-flex items-center gap-2.5 py-3 text-xl font-bold tracking-tight text-foreground no-underline focus-visible:outline-2 focus-visible:outline-offset-[-4px]">
+    <img src="/favicon.svg" alt="" width="36" height="36" class="size-9" />
+    <span>Seoyedoum</span>
+  </a>
+  <nav aria-label="주 메뉴" class="flex flex-wrap items-stretch gap-8 max-[680px]:order-3 max-[680px]:w-full max-[680px]:gap-5">
+    {menuItems.map(({ href, label }) => (
+      <a
+        href={href}
+        aria-current={currentPath === href.replace(/\/$/, '') ? 'page' : undefined}
+        class="relative inline-flex items-center px-0.5 pt-0.5 text-base font-semibold text-muted-foreground no-underline transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-4px] max-[680px]:py-3 max-[680px]:text-sm aria-[current=page]:text-foreground aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:bottom-0 aria-[current=page]:after:h-[3px] aria-[current=page]:after:rounded-full aria-[current=page]:after:bg-foreground"
+      >
+        {label}
+      </a>
+    ))}
+  </nav>
 </header>

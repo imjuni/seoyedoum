@@ -1,4 +1,4 @@
-import { Application, Graphics, Text } from 'pixi.js';
+import { Application, Graphics, Rectangle, Text } from 'pixi.js';
 import { layoutText } from './layoutText';
 
 const input = (id: string) => document.getElementById(id) as HTMLInputElement;
@@ -8,7 +8,7 @@ const numeric = (id: string, fallback: number, min: number, max: number) => {
   return Number.isFinite(value) && input(id).value !== '' ? Math.min(max, Math.max(min, value)) : fallback;
 };
 const presets: Record<string, [string, number, number, number]> = {
-  half: ['반절지', 35, 135, 4], full: ['전지', 70, 135, 8], national: ['국전지', 70, 100, 8],
+  half: ['반절지', 35, 135, 4], full: ['전지', 70, 135, 8], national: ['국전지', 70, 205, 8],
 };
 const fontFallbacks = ['Batang', 'AppleMyungjo', 'Noto Serif CJK KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'sans-serif'];
 const fontFamilies: Record<string, string[]> = {
@@ -55,6 +55,10 @@ function restoreSettings() {
         }
         control.value = value;
       }
+    }
+    if (input('paper').value === 'national' && input('paper-width').value === '70' && input('paper-height').value === '100') {
+      input('paper-height').value = '205';
+      saveSettings();
     }
   } catch (error) {
     console.warn('Failed to restore layout settings', error);
@@ -235,6 +239,26 @@ async function initialize() {
     });
     element('previous').addEventListener('click', () => { page = Math.max(0, page - 1); draw(); });
     element('next').addEventListener('click', () => { page = Math.min(totalPages - 1, page + 1); draw(); });
+    element('download-png').addEventListener('click', async () => {
+      clearTimeout(timer);
+      draw();
+      const canvas = app.renderer.extract.canvas({
+        target: app.stage,
+        frame: new Rectangle(0, 0, paperWidth, paperHeight),
+        resolution: 2,
+        clearColor: '#fffef8',
+      });
+      const blob = canvas instanceof HTMLCanvasElement
+        ? await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+        : canvas.convertToBlob ? await canvas.convertToBlob({ type: 'image/png' }) : null;
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `seoyedoum-layout-page-${page + 1}.png`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
     draw();
     fitPaper();
   } catch (error) {
