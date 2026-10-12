@@ -30,11 +30,10 @@ import '../styles/layout-fonts.css';
       <div id="preview-viewport" class="canvas-area">
         <div id="paper-preview" role="img" aria-label="오른쪽에서 왼쪽으로 세로쓰기한 글자 배치"></div>
         <p id="render-status" role="status">미리보기를 준비하고 있습니다.</p>
-        <div class="viewport-controls" role="group" aria-label="미리보기 이동 및 확대">
-          <span></span><button id="pan-up" type="button" aria-label="위로 이동" title="위로 이동">↑</button><button id="zoom-in" type="button" aria-label="확대" title="확대">＋</button>
-          <button id="pan-left" type="button" aria-label="왼쪽으로 이동" title="왼쪽으로 이동">←</button><button id="fit-paper" type="button" aria-label="용지에 맞춤" title="용지에 맞춤">⤢</button><button id="pan-right" type="button" aria-label="오른쪽으로 이동" title="오른쪽으로 이동">→</button>
-          <span></span><button id="pan-down" type="button" aria-label="아래로 이동" title="아래로 이동">↓</button><button id="zoom-out" type="button" aria-label="축소" title="축소">−</button>
-          <output id="zoom-level" class="zoom-level" aria-live="polite">100%</output>
+        <div class="viewport-controls" role="group" aria-label="미리보기 확대 및 맞춤" title="휠: 이동 · Shift+휠: 가로 이동 · Cmd/Ctrl+휠: 확대·축소 · 드래그: 이동">
+          <button id="fit-paper" type="button" aria-label="용지에 맞춤" title="용지에 맞춤">⤢</button>
+          <button id="zoom-in" type="button" aria-label="확대" title="확대 (Cmd/Ctrl+휠)">＋</button>
+          <button id="zoom-out" type="button" aria-label="축소" title="축소 (Cmd/Ctrl+휠)">−</button>
         </div>
       </div>
       <p id="layout-summary" class="summary" aria-live="polite"></p>
@@ -73,11 +72,10 @@ import '../styles/layout-fonts.css';
   #paper-preview { position: absolute; left: 0; top: 0; transform-origin: top left; box-shadow: 0 3px 20px #00000012; }
   #paper-preview :global(canvas) { width: 100%; height: auto; display: block; }
   #render-status { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 13px; color: var(--muted-foreground); text-align: center; }
-  .viewport-controls { position: absolute; right: 16px; bottom: 16px; display: grid; grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px) auto; gap: 4px; z-index: 1; }
-  .viewport-controls button { display: grid; place-items: center; padding: 0; border: 1px solid #6b7580; border-radius: 8px; background: #222a33; color: #f5f7f9; font-size: 22px; line-height: 1; box-shadow: 0 2px 6px #0003; }
-  .viewport-controls button:hover { background: #3c4855; }
-  .viewport-controls button:active { background: #536273; }
-  .zoom-level { grid-column: 1 / -1; justify-self: center; border-radius: 4px; padding: 2px 7px; background: #222a33; color: #f5f7f9; font-size: 11px; }
+  .viewport-controls { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 8px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); box-shadow: 0 8px 20px #0002; cursor: default; z-index: 1; }
+  .viewport-controls button { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--foreground); font-size: 22px; line-height: 1; }
+  .viewport-controls button:hover { background: var(--muted); }
+  .viewport-controls button:active { background: var(--accent); }
   .summary { text-align: center; padding: 10px 16px; font-size: 12px; color: var(--muted-foreground); }
   @media (max-width: 760px) { .workspace { height: auto; min-height: 100%; grid-template-columns: 1fr; } .controls { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); } .preview { height: 70dvh; min-height: 500px; } .toolbar { padding: 12px; } }
 </style>

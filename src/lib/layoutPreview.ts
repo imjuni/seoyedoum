@@ -31,7 +31,6 @@ let offsetY = 0;
 
 function applyCamera() {
   paperPreview.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${zoom})`;
-  element('zoom-level').textContent = `${Math.round(zoom * 100)}%`;
 }
 
 function fitPaper() {
@@ -61,20 +60,11 @@ function setupCamera() {
   element('fit-paper').addEventListener('click', fitPaper);
   element('zoom-in').addEventListener('click', () => centerZoom(1.2));
   element('zoom-out').addEventListener('click', () => centerZoom(1 / 1.2));
-  for (const [id, dx, dy] of [
-    ['pan-up', 0, -60], ['pan-down', 0, 60], ['pan-left', -60, 0], ['pan-right', 60, 0],
-  ] as const) {
-    element(id).addEventListener('click', () => {
-      offsetX += dx;
-      offsetY += dy;
-      applyCamera();
-    });
-  }
   let lastX = 0;
   let lastY = 0;
   let dragging = false;
   viewport.addEventListener('pointerdown', (event) => {
-    if (event.target instanceof Element && event.target.closest('.viewport-controls')) return;
+    if (event.button !== 0 || (event.target instanceof Element && event.target.closest('.viewport-controls'))) return;
     dragging = true;
     lastX = event.clientX;
     lastY = event.clientY;
@@ -90,10 +80,24 @@ function setupCamera() {
   });
   viewport.addEventListener('pointerup', () => { dragging = false; });
   viewport.addEventListener('pointercancel', () => { dragging = false; });
+  viewport.addEventListener('lostpointercapture', () => { dragging = false; });
   viewport.addEventListener('wheel', (event) => {
     event.preventDefault();
-    const rect = viewport.getBoundingClientRect();
-    zoomAt(event.deltaY < 0 ? 1.1 : 1 / 1.1, event.clientX - rect.left, event.clientY - rect.top);
+    const units = [1, 16, viewport.clientHeight][event.deltaMode] ?? 1;
+    const deltaX = event.deltaX * units;
+    const deltaY = event.deltaY * units;
+    if (event.metaKey || event.ctrlKey) {
+      const rect = viewport.getBoundingClientRect();
+      zoomAt(Math.exp(-deltaY * 0.0015), event.clientX - rect.left, event.clientY - rect.top);
+      return;
+    }
+    if (event.shiftKey) {
+      offsetX -= deltaY || deltaX;
+    } else {
+      offsetX -= deltaX;
+      offsetY -= deltaY;
+    }
+    applyCamera();
   }, { passive: false });
   new ResizeObserver(fitPaper).observe(viewport);
 }
