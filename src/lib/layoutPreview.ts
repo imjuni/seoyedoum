@@ -1,5 +1,6 @@
-import { Application, Graphics, Rectangle, Text } from 'pixi.js';
+import { Application, Container, Graphics, Rectangle, Text } from 'pixi.js';
 import { layoutText } from './layoutText';
+import { preparePrintWindow } from './layoutPrint';
 
 const input = (id: string) => document.getElementById(id) as HTMLInputElement;
 const element = (id: string) => document.getElementById(id)!;
@@ -20,7 +21,7 @@ const fontFamilies: Record<string, string[]> = {
 };
 const settingsKey = 'seoyedoum.layout.settings.v1';
 const settingIds = [
-  'manuscript', 'seal', 'paper', 'paper-width', 'paper-height', 'columns', 'rows',
+  'layout-title', 'manuscript', 'seal', 'paper', 'paper-width', 'paper-height', 'columns', 'rows',
   'margin', 'font-size', 'seal-size', 'font', 'grid', 'spaces',
 ] as const;
 
@@ -162,41 +163,56 @@ function draw() {
   const scale = 1000 / Math.max(width, height);
   const w = width * scale;
   const h = height * scale;
-  paperWidth = w;
-  paperHeight = h;
   const margin = Math.min(w, h) * numeric('margin', 8, 3, 20) / 100;
   const cellWidth = (w - margin * 2) / columns;
   const cellHeight = (h - margin * 2) / rows;
-  app.renderer.resize(w, h);
-  paperPreview.style.width = `${w}px`;
-  paperPreview.style.height = `${h}px`;
+  const title = input('layout-title').value;
+  const titleCharacters = Array.from(new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(title), ({ segment }) => segment);
+  const titleWidth = titleCharacters.length ? cellWidth : 0;
+  const previousWidth = paperWidth;
+  const previousHeight = paperHeight;
+  paperWidth = w + titleWidth;
+  paperHeight = Math.max(h, titleCharacters.length * cellHeight + margin * 2);
+  app.renderer.resize(paperWidth, paperHeight);
+  paperPreview.style.width = `${paperWidth}px`;
+  paperPreview.style.height = `${paperHeight}px`;
   app.canvas.style.width = '100%';
   app.canvas.style.height = 'auto';
-  for (const child of app.stage.removeChildren()) child.destroy();
+  for (const child of app.stage.removeChildren()) child.destroy({ children: true });
+  const paperContent = new Container();
+  paperContent.position.x = titleWidth;
+  app.stage.addChild(paperContent);
   const grid = new Graphics();
-  app.stage.addChild(grid);
-  const addText = (text: string, x: number, y: number, fontSize: number, fill: string, fontFamily: string | string[]) => {
-    const label = new Text({ text, style: { fontFamily, fontSize, fill } });
+  paperContent.addChild(grid);
+  const addText = (text: string, x: number, y: number, fontSize: number, fill: string, fontFamily: string | string[], parent: Container = paperContent) => {
+    const label = new Text({ text, resolution: 2, style: { fontFamily, fontSize, fill } });
     label.anchor.set(0.5);
     label.position.set(x, y);
-    app.stage.addChild(label);
+    parent.addChild(label);
   };
   if (input('grid').checked) {
     for (let c = 0; c <= columns; c++) grid.moveTo(margin + c * cellWidth, margin).lineTo(margin + c * cellWidth, h - margin);
     for (let r = 0; r <= rows; r++) grid.moveTo(margin, margin + r * cellHeight).lineTo(w - margin, margin + r * cellHeight);
-    grid.stroke({ color: 0x8195ac, alpha: 0.45, width: 1 });
-    const numberSize = Math.min(13, margin * .4, cellWidth * .4, cellHeight * .5);
-    for (let c = 0; c < columns; c++) addText(String(c + 1), w - margin - (c + .5) * cellWidth, margin * .5, numberSize, '#60738a', 'sans-serif');
-    for (let r = 0; r < rows; r++) addText(String(r + 1), w - margin * .5, margin + (r + .5) * cellHeight, numberSize, '#60738a', 'sans-serif');
+    grid.stroke({ color: 0xaaaaaa, alpha: 1, width: 1 });
+    const numberSize = Math.min(23, margin * .7, cellWidth * .55, cellHeight * .75);
+    for (let c = 0; c < columns; c++) addText(String(c + 1), w - margin - (c + .5) * cellWidth, margin * .5, numberSize, '#333333', 'sans-serif');
+    for (let r = 0; r < rows; r++) addText(String(r + 1), w - margin * .5, margin + (r + .5) * cellHeight, numberSize, '#333333', 'sans-serif');
   }
   const fontSize = Math.min(cellWidth, cellHeight) * numeric('font-size', 70, 30, 95) / 100;
   const sealSize = Math.min(cellWidth, cellHeight) * numeric('seal-size', 50, 20, 95) / 100;
-  const fontFamily = fontFamilies[(element('font') as HTMLSelectElement).value] ?? fontFamilies.serif;
+  const fontFamily = fontFamilies[(element('font') as HTMLSelectElement).value] ?? fontFamilies.sj_lmk;
+  if (titleCharacters.length) {
+    titleCharacters.forEach((character, index) => {
+      if (/^\s+$/u.test(character)) return;
+      addText(character, titleWidth * .5, margin + (index + .5) * cellHeight, fontSize, '#000000', fontFamily, app.stage);
+    });
+  }
   for (const cell of cells) {
     if (cell.page !== page || /^\s+$/u.test(cell.text)) continue;
-    addText(cell.text, w - margin - (cell.column + .5) * cellWidth, margin + (cell.row + .5) * cellHeight, cell.kind === 'seal' ? sealSize : fontSize, cell.kind === 'seal' ? '#a62727' : '#24221e', fontFamily);
+    addText(cell.text, w - margin - (cell.column + .5) * cellWidth, margin + (cell.row + .5) * cellHeight, cell.kind === 'seal' ? sealSize : fontSize, cell.kind === 'seal' ? '#a62727' : '#000000', fontFamily);
   }
   app.render();
+  if (previousWidth !== paperWidth || previousHeight !== paperHeight) fitPaper();
   const preset = presets[(element('paper') as HTMLSelectElement).value]!;
   element('paper-info').textContent = `${width === preset[1] && height === preset[2] ? preset[0] : '사용자 지정'} · ${width} × ${height} cm`;
   element('page-info').textContent = `${page + 1} / ${pages}장`;
@@ -206,17 +222,66 @@ function draw() {
   element('font-size-value').textContent = `${input('font-size').value}%`;
   element('seal-size-value').textContent = `${input('seal-size').value}%`;
   element('layout-summary').textContent = `${cells.length.toLocaleString('ko-KR')}칸 사용 · ${columns}열 × ${rows}행 · 장당 ${columns * rows}칸`;
-  element('paper-preview').setAttribute('aria-label', `${page + 1}장, ${columns}열 ${rows}행, 오른쪽부터 세로쓰기. ${cells.filter(c => c.page === page).map(c => c.text).join('')}`);
+  element('paper-preview').setAttribute('aria-label', `${title ? `제목: ${title}. ` : ''}${page + 1}장, ${columns}열 ${rows}행, 오른쪽부터 세로쓰기. ${cells.filter(c => c.page === page).map(c => c.text).join('')}`);
+}
+
+async function exportPage() {
+  clearTimeout(timer);
+  draw();
+  const canvas = app.renderer.extract.canvas({
+    target: app.stage,
+    frame: new Rectangle(0, 0, paperWidth, paperHeight),
+    resolution: 2,
+    clearColor: '#ffffff',
+  });
+  return canvas instanceof HTMLCanvasElement
+    ? new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+    : canvas.convertToBlob ? canvas.convertToBlob({ type: 'image/png' }) : null;
+}
+
+function setupPrint() {
+  const dialog = element('print-dialog') as HTMLDialogElement;
+  const error = element('print-error');
+  element('print-layout').addEventListener('click', () => {
+    error.hidden = true;
+    dialog.showModal();
+  });
+  element('print-cancel').addEventListener('click', () => dialog.close());
+  element('print-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const size = input('print-paper-size').value;
+    if (size !== 'A3' && size !== 'A4') return;
+    const target = window.open('', '_blank', 'popup,width=900,height=900');
+    if (!target) {
+      error.textContent = '인쇄 창을 열 수 없습니다. 이 사이트의 팝업을 허용한 뒤 다시 시도해 주세요.';
+      error.hidden = false;
+      return;
+    }
+    target.opener = null;
+    clearTimeout(timer);
+    draw();
+    const printWindow = preparePrintWindow(target, size, paperWidth / paperHeight, page + 1);
+    dialog.close();
+    try {
+      const blob = await exportPage();
+      if (!blob) throw new Error('Failed to export print image');
+      if (!target.closed) await printWindow.show(blob);
+    } catch (error) {
+      printWindow.fail();
+      console.error('Failed to prepare layout print', error);
+    }
+  });
 }
 
 async function initialize() {
   try {
     restoreSettings();
     element('render-status').textContent = '캔버스를 초기화하고 있습니다.';
-    await app.init({ background: '#fffef8', antialias: true, autoStart: false, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true, preference: 'webgl' });
+    await app.init({ background: '#ffffff', antialias: true, autoStart: false, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true, preference: 'webgl' });
     element('paper-preview').appendChild(app.canvas);
     element('render-status').hidden = true;
     setupCamera();
+    setupPrint();
     document.querySelectorAll('.controls input, .controls textarea, .controls select').forEach(control => {
       control.addEventListener('input', () => {
         if (control.id !== 'paper') saveSettings();
@@ -240,17 +305,7 @@ async function initialize() {
     element('previous').addEventListener('click', () => { page = Math.max(0, page - 1); draw(); });
     element('next').addEventListener('click', () => { page = Math.min(totalPages - 1, page + 1); draw(); });
     element('download-png').addEventListener('click', async () => {
-      clearTimeout(timer);
-      draw();
-      const canvas = app.renderer.extract.canvas({
-        target: app.stage,
-        frame: new Rectangle(0, 0, paperWidth, paperHeight),
-        resolution: 2,
-        clearColor: '#fffef8',
-      });
-      const blob = canvas instanceof HTMLCanvasElement
-        ? await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
-        : canvas.convertToBlob ? await canvas.convertToBlob({ type: 'image/png' }) : null;
+      const blob = await exportPage();
       if (!blob) return;
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

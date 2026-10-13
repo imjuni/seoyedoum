@@ -6,6 +6,9 @@ import Layout from '../layouts/Layout.astro';
   <main class="workspace">
     <aside class="controls">
       <header><h1>글자 배치</h1><p>글을 담고, 종이 위의 균형을 살펴보세요.</p></header>
+      <label for="layout-title">제목</label>
+      <input id="layout-title" type="text" placeholder="만해 한용운의 님의 침묵" aria-describedby="title-help" />
+      <p id="title-help" class="hint">용지 규격 밖 왼쪽에 본문과 같은 글꼴·크기로 세로 배치합니다. 띄어쓰기는 빈 칸으로 유지합니다.</p>
       <label for="manuscript">배치할 글</label>
       <textarea id="manuscript" rows="7" placeholder="여기에 글을 입력하세요.">바람이 지나간 자리마다
 고요한 마음을 놓아두고
@@ -20,7 +23,7 @@ import Layout from '../layouts/Layout.astro';
       <label for="margin">용지 여백 <output id="margin-value">8%</output></label><input id="margin" type="range" min="3" max="20" value="8" />
       <label for="font-size">글자 크기 <output id="font-size-value">70%</output></label><input id="font-size" type="range" min="30" max="95" value="70" />
       <label for="seal-size">낙관 크기 <output id="seal-size-value">50%</output></label><input id="seal-size" type="range" min="20" max="95" value="50" />
-      <label for="font">글꼴</label><select id="font"><option value="sj_lck">갈물이철경체</option><option value="sj_lmk">꽃뜰이미경체</option><option value="sj_kch">일중김충현체</option><option value="serif">명조체</option><option value="sans-serif">고딕체</option></select>
+      <label for="font">글꼴</label><select id="font"><option value="sj_lck">갈물이철경체</option><option value="sj_lmk" selected>꽃뜰이미경체</option><option value="sj_kch">일중김충현체</option><option value="serif">명조체</option><option value="sans-serif">고딕체</option></select>
       <p class="hint">선택한 글꼴이 설치되어 있으면 적용하고, 없으면 명조체, 고딕체 순으로 표시합니다.</p>
       <div class="checks"><label><input id="grid" type="checkbox" checked /> 격자·번호 표시</label><label><input id="spaces" type="checkbox" /> 공백 한 칸 유지</label></div>
       <p class="hint">용지 크기는 직접 수정할 수 있습니다. 한 장을 넘는 글은 다음 장으로 이어집니다. 입력 내용은 서버에 저장하지 않습니다.</p>
@@ -37,11 +40,24 @@ import Layout from '../layouts/Layout.astro';
           <button id="download-png" type="button" aria-label="현재 장 PNG 다운로드" title="현재 장 PNG 다운로드">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3" /></svg>
           </button>
+          <button id="print-layout" type="button" aria-label="현재 장 인쇄" aria-haspopup="dialog" title="현재 장 인쇄">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4V9h16v9h-2M6 14h12v7H6zM17 12h.01" /></svg>
+          </button>
         </div>
       </div>
       <p id="layout-summary" class="summary" aria-live="polite"></p>
       <noscript>미리보기를 사용하려면 JavaScript를 활성화해 주세요.</noscript>
     </section>
+    <dialog id="print-dialog" aria-labelledby="print-dialog-title">
+      <form id="print-form">
+        <h2 id="print-dialog-title">인쇄 용지 선택</h2>
+        <p class="hint">현재 장을 선택한 용지에 맞춰 인쇄합니다.</p>
+        <label for="print-paper-size">용지 크기</label>
+        <select id="print-paper-size"><option value="A4">A4 · 210 × 297 mm</option><option value="A3">A3 · 297 × 420 mm</option></select>
+        <p id="print-error" role="alert" hidden></p>
+        <div class="dialog-actions"><button id="print-cancel" type="button">취소</button><button type="submit">인쇄 창 열기</button></div>
+      </form>
+    </dialog>
   </main>
 </Layout>
 
@@ -81,5 +97,11 @@ import Layout from '../layouts/Layout.astro';
   .viewport-controls button:hover { background: var(--muted); }
   .viewport-controls button:active { background: var(--accent); }
   .summary { text-align: center; padding: 10px 16px; font-size: 12px; color: var(--muted-foreground); }
+  dialog { margin: auto; width: min(360px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--foreground); }
+  dialog::backdrop { background: #0006; }
+  #print-form { display: flex; flex-direction: column; gap: 14px; }
+  #print-dialog-title { font-size: 18px; font-weight: 700; }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  #print-error { color: #a62727; font-size: 13px; }
   @media (max-width: 760px) { .workspace { height: auto; min-height: 100%; grid-template-columns: 1fr; } .controls { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); } .preview { height: 70dvh; min-height: 500px; } .toolbar { padding: 12px; } }
 </style>
