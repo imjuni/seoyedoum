@@ -108,3 +108,7 @@ dist
 .tern-port
 public/__font
 seoyedoum.zip
+
+# MacOSX
+.DS_Store
+**/.DS_Store
